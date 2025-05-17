@@ -1,9 +1,11 @@
 import { jsPDF } from "jspdf";
+import { marked } from "marked";
 import React, { useEffect, useRef, useState } from "react";
 
 interface Message {
   sender: "user" | "bot";
   text: string;
+  isHtml?: boolean;
 }
 
 interface ChatSession {
@@ -11,6 +13,12 @@ interface ChatSession {
   title: string;
   messages: Message[];
 }
+
+const stripHtmlTags = (html: string): string => {
+  const tmp = document.createElement("div");
+  tmp.innerHTML = html;
+  return tmp.textContent || tmp.innerText || "";
+};
 
 const Chat: React.FC = () => {
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([
@@ -21,6 +29,7 @@ const Chat: React.FC = () => {
         {
           sender: "bot",
           text: "🌸 Hi! I'm Grantee, your AI grant assistant. Tell me about your business!",
+          isHtml: false,
         },
       ],
     },
@@ -33,38 +42,53 @@ const Chat: React.FC = () => {
 
   const selectedSession = chatSessions.find((s) => s.id === selectedSessionId);
 
-  const exportToPDF = (text: string, index: number) => {
+  const exportToPDF = (htmlText: string, index: number) => {
     const doc = new jsPDF();
     doc.setFontSize(12);
     doc.text("Business Plan Response from Grantee AI", 10, 10);
     doc.setFont("times", "normal");
-    const lines = doc.splitTextToSize(text, 180);
+    // Strip HTML tags for clean PDF text
+    const plainText = stripHtmlTags(htmlText);
+    const lines = doc.splitTextToSize(plainText, 180);
     doc.text(lines, 10, 20);
     doc.save(`grantee-business-plan-${index + 1}.pdf`);
   };
 
   const handleSend = async () => {
     if (!input.trim() || !selectedSession) return;
-    const userMessage: Message = { sender: "user", text: input };
-    const updatedSessions = chatSessions.map((session) =>
-      session.id === selectedSessionId
-        ? { ...session, messages: [...session.messages, userMessage] }
-        : session
+
+    const userMessage: Message = { sender: "user", text: input, isHtml: false };
+    setChatSessions((prev) =>
+      prev.map((session) =>
+        session.id === selectedSessionId
+          ? { ...session, messages: [...session.messages, userMessage] }
+          : session
+      )
     );
-    setChatSessions(updatedSessions);
     setInput("");
     setLoading(true);
 
     const prompt = `Please respond in ${language}. User says: ${input}`;
 
     try {
-      const res = await fetch("http://localhost:8080/api/qwen", {
+      const res = await fetch("/api/qwen", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt }),
+        body: JSON.stringify({
+          prompt,
+          rag_options: {
+            knowledge_base_id: "pq3gfaz9bh",
+          },
+        }),
       });
       const data = await res.json();
-      const botReply: Message = { sender: "bot", text: `✨ ${data.reply}` };
+
+      // Assume data.reply is raw HTML string
+      const botReply: Message = {
+        sender: "bot",
+        text: data.reply,
+        isHtml: true,
+      };
 
       setChatSessions((prev) =>
         prev.map((session) =>
@@ -77,6 +101,7 @@ const Chat: React.FC = () => {
       const errorReply: Message = {
         sender: "bot",
         text: "⚠️ Oops! Something went wrong.",
+        isHtml: false,
       };
       setChatSessions((prev) =>
         prev.map((session) =>
@@ -149,11 +174,20 @@ const Chat: React.FC = () => {
                 }`}
               >
                 <div
-                  className={`p-3 rounded-lg shadow-md ${
-                    msg.sender === "user" ? "bg-blue-100" : "bg-black"
+                  className={`p-3 rounded-lg shadow-md max-w-[70%] ${
+                    msg.sender === "user"
+                      ? "bg-blue-100"
+                      : "bg-black text-white"
                   }`}
                 >
-                  {msg.text}
+                  {msg.isHtml && msg.sender === "bot" ? (
+                    <div
+                      className="prose max-w-full"
+                      dangerouslySetInnerHTML={{ __html: marked(msg.text) }}
+                    />
+                  ) : (
+                    msg.text
+                  )}
                 </div>
                 {msg.sender === "bot" && (
                   <button

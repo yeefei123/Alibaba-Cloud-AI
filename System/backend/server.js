@@ -6,7 +6,6 @@ const cors = require("cors");
 dotenv.config();
 const app = express();
 
-// ✅ Allow all origins (or configure it if needed)
 app.use(cors());
 app.use(express.json());
 
@@ -17,11 +16,12 @@ app.post("/api/qwen", async (req, res) => {
     const response = await axios.post(
       "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions",
       {
-        model: "qwen-plus",
+        model: "qwen2.5-72b-instruct",
         messages: [
           { role: "system", content: "You are a helpful assistant." },
           { role: "user", content: userPrompt },
         ],
+        knowledgeBaseId: "pq3gfaz9bh",
       },
       {
         headers: {
