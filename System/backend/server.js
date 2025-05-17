@@ -1,45 +1,44 @@
 const express = require('express');
 const axios = require('axios');
+const dotenv = require('dotenv');
 const cors = require('cors');
-require('dotenv').config();
+
+dotenv.config();
 const app = express();
 
+// ✅ Allow all origins (or configure it if needed)
 app.use(cors());
 app.use(express.json());
 
-const ALIBABA_API_URL = 'https://dashscope.aliyuncs.com/api/v1';
-const API_KEY = process.env.DASHSCOPE_API_KEY;
-
-app.post('/api/chat', async (req, res) => {
-  const userQuery = req.body.query;
+app.post('/api/qwen', async (req, res) => {
+  const userPrompt = req.body.prompt;
 
   try {
     const response = await axios.post(
-      ALIBABA_API_URL,
+      'https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions',
       {
-        model: 'qwen-turbo',
-        input: {
-          prompt: userQuery,
-        },
-        parameters: {
-          result_format: 'text',
-        },
+        model: 'qwen-plus',
+        messages: [
+          { role: 'system', content: 'You are a helpful assistant.' },
+          { role: 'user', content: userPrompt }
+        ]
       },
       {
         headers: {
-          'Authorization': `API-Key ${API_KEY}`,
-          'Content-Type': 'application/json',
-        },
+          Authorization: 'Bearer sk-059def50570e4193bdfd653c1a776860',          
+          'Content-Type': 'application/json'
+        }
       }
     );
 
-    const botReply = response.data.output.text || "Sorry, I couldn't generate a response.";
-    res.json({ reply: botReply });
-
-  } catch (error) {
-    console.error('Alibaba Cloud API error:', error?.response?.data || error.message);
-    res.status(500).json({ reply: 'Error communicating with Alibaba Cloud AI.' });
+    const aiReply = response.data.choices[0].message.content;
+    res.json({ reply: aiReply });
+  } catch (err) {
+    console.error(err.response?.data || err.message);
+    res.status(500).json({ error: 'Failed to call Qwen API' });
   }
 });
 
-app.listen(8080, () => console.log('✅ Server running on http://localhost:8080'));
+app.listen(8080, () => {
+  console.log('✅ Server running on http://localhost:8080');
+});
