@@ -1,7 +1,7 @@
-const express = require('express');
-const axios = require('axios');
-const dotenv = require('dotenv');
-const cors = require('cors');
+const express = require("express");
+const axios = require("axios");
+const dotenv = require("dotenv");
+const cors = require("cors");
 
 dotenv.config();
 const app = express();
@@ -10,24 +10,24 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.post('/api/qwen', async (req, res) => {
+app.post("/api/qwen", async (req, res) => {
   const userPrompt = req.body.prompt;
 
   try {
     const response = await axios.post(
-      'https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions',
+      "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions",
       {
-        model: 'qwen-plus',
+        model: "qwen-plus",
         messages: [
-          { role: 'system', content: 'You are a helpful assistant.' },
-          { role: 'user', content: userPrompt }
-        ]
+          { role: "system", content: "You are a helpful assistant." },
+          { role: "user", content: userPrompt },
+        ],
       },
       {
         headers: {
-          Authorization: 'Bearer sk-059def50570e4193bdfd653c1a776860',          
-          'Content-Type': 'application/json'
-        }
+          Authorization: "Bearer sk-059def50570e4193bdfd653c1a776860",
+          "Content-Type": "application/json",
+        },
       }
     );
 
@@ -35,10 +35,10 @@ app.post('/api/qwen', async (req, res) => {
     res.json({ reply: aiReply });
   } catch (err) {
     console.error(err.response?.data || err.message);
-    res.status(500).json({ error: 'Failed to call Qwen API' });
+    res.status(500).json({ error: "Failed to call Qwen API" });
   }
 });
 
 app.listen(8080, () => {
-  console.log('✅ Server running on http://localhost:8080');
+  console.log("✅ Server running on http://localhost:8080");
 });
