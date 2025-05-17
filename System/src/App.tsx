@@ -36,10 +36,10 @@ function App() {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:8080/api/chat", {
+      const res = await fetch("http://localhost:8080/api/qwen", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: input }),
+        body: JSON.stringify({ prompt: input }),
       });
       const data = await res.json();
       const botReply = { sender: "bot", text: `✨ ${data.reply}` };
