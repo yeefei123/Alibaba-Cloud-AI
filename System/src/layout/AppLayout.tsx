@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
-import Sidebar from './Sidebar';
-import Header from './Header';
-import MainContent from './MainContent';
+import React, { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
+import Header from "./Header";
+import MainContent from "./MainContent";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -20,10 +19,10 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
     };
 
     checkMobileView();
-    window.addEventListener('resize', checkMobileView);
+    window.addEventListener("resize", checkMobileView);
 
     return () => {
-      window.removeEventListener('resize', checkMobileView);
+      window.removeEventListener("resize", checkMobileView);
     };
   }, []);
 
@@ -37,17 +36,17 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   // Get current active navigation item based on path
   const getActiveNav = () => {
     const path = location.pathname;
-    if (path === '/') return 'Home';
-    if (path.startsWith('/grants')) return 'Eligible Grants';
-    if (path.startsWith('/applications')) return 'Applications';
-    if (path.startsWith('/regulations')) return 'Regulations';
-    if (path.startsWith('/support')) return 'Support';
-    if (path.startsWith('/chat')) return 'Chat Assistant';
-    return 'Home';
+    if (path === "/") return "Home";
+    if (path.startsWith("/grants")) return "Eligible Grants";
+    if (path.startsWith("/applications")) return "Applications";
+    if (path.startsWith("/regulations")) return "Regulations";
+    if (path.startsWith("/support")) return "Support";
+    if (path.startsWith("/chat")) return "Chat Assistant";
+    return "Home";
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="h-screen bg-gray-50 dark:bg-gray-900">
       {/* Mobile Backdrop */}
       {isMobileView && sidebarOpen && (
         <div
@@ -58,25 +57,17 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       )}
 
       {/* Sidebar */}
-      <Sidebar
-        sidebarOpen={sidebarOpen}
-        activeNav={getActiveNav()}
-      />
+      {/* <Sidebar sidebarOpen={sidebarOpen} activeNav={getActiveNav()} /> */}
 
       {/* Main Content Area */}
-      <div className="sm:pl-72">
+      <div>
         {/* Header */}
-        <Header
-          sidebarOpen={sidebarOpen}
-          setSidebarOpen={setSidebarOpen}
-        />
+        <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
         {/* Main Content */}
-        <main className="pt-20">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <MainContent>
-              {children}
-            </MainContent>
+        <main className="h-full">
+          <div>
+            <MainContent>{children}</MainContent>
           </div>
         </main>
       </div>
@@ -84,4 +75,4 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   );
 };
 
-export default AppLayout; 
+export default AppLayout;

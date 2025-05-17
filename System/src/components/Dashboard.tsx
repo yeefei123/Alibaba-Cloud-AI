@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import FloatingChat from './FloatingChat';
-import AppLayout from '../layout/AppLayout';
+import React, { useState } from "react";
+import AppLayout from "../layout/AppLayout";
+import FloatingChat from "./FloatingChat";
 
 /**
  * Responsive AI‑Grant Navigator dashboard built with TailwindCSS + React.
@@ -12,9 +12,9 @@ import AppLayout from '../layout/AppLayout';
 const Dashboard: React.FC = () => {
   const [selectedGrants, setSelectedGrants] = useState<string[]>([]);
   const grants = [
-    'Digital Transformation Grant',
-    'Green Technology Innovation Fund',
-    'SME Export Development Program',
+    "Digital Transformation Grant",
+    "Green Technology Innovation Fund",
+    "SME Export Development Program",
   ];
 
   const toggleGrant = (g: string) =>
@@ -24,13 +24,30 @@ const Dashboard: React.FC = () => {
 
   return (
     <AppLayout>
-      <div className="space-y-8">
+      <div className="space-y-8 mt-10">
         {/* metrics grid */}
         <section className="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-4">
           {/* Eligibility */}
           <div className="bg-white shadow rounded-xl p-6 flex flex-col items-center justify-center">
             <div className="flex items-center gap-2 mb-2">
-              <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14" stroke="#22c55e" strokeWidth="3" fill="none"/><path d="M11 16.5l3 3 6-6" stroke="#22c55e" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                <circle
+                  cx="16"
+                  cy="16"
+                  r="14"
+                  stroke="#22c55e"
+                  strokeWidth="3"
+                  fill="none"
+                />
+                <path
+                  d="M11 16.5l3 3 6-6"
+                  stroke="#22c55e"
+                  strokeWidth="3"
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
               <span className="text-green-600 text-lg font-bold">Eligible</span>
             </div>
             <h2 className="text-sm font-medium">Eligibility Status</h2>
@@ -40,11 +57,36 @@ const Dashboard: React.FC = () => {
           <div className="bg-white shadow rounded-xl p-6 flex flex-col justify-center">
             <h2 className="text-sm font-medium mb-1">Application Timeline</h2>
             <p className="flex items-center gap-2 text-sm text-gray-600 mb-4">
-              <svg width="18" height="18" fill="none" stroke="#2563eb" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2" stroke="#2563eb" strokeWidth="2"/><path d="M16 3v4M8 3v4M3 9h18" stroke="#2563eb" strokeWidth="2"/></svg>
+              <svg
+                width="18"
+                height="18"
+                fill="none"
+                stroke="#2563eb"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+              >
+                <rect
+                  x="3"
+                  y="5"
+                  width="18"
+                  height="16"
+                  rx="2"
+                  stroke="#2563eb"
+                  strokeWidth="2"
+                />
+                <path
+                  d="M16 3v4M8 3v4M3 9h18"
+                  stroke="#2563eb"
+                  strokeWidth="2"
+                />
+              </svg>
               <span>Next deadline: June 15, 2025</span>
             </p>
             <div className="w-full bg-gray-200 rounded-full h-2 mb-1">
-              <div className="bg-blue-500 h-2 rounded-full" style={{ width: '50%' }} />
+              <div
+                className="bg-blue-500 h-2 rounded-full"
+                style={{ width: "50%" }}
+              />
             </div>
             <div className="flex justify-between text-[10px] text-gray-400">
               <span>Application</span>
@@ -59,9 +101,9 @@ const Dashboard: React.FC = () => {
             <h2 className="text-sm font-medium mb-4">Latest regulations</h2>
             <ul className="text-[13px] text-gray-700 space-y-3 flex-1 overflow-y-auto">
               {[
-                ['Updated SME Definition Guidelines', '15 May 2025'],
-                ['Tax Incentives for Digital Adoption', '10 May 2025'],
-                ['Revised Export Compliance Standards', '05 May 2025'],
+                ["Updated SME Definition Guidelines", "15 May 2025"],
+                ["Tax Incentives for Digital Adoption", "10 May 2025"],
+                ["Revised Export Compliance Standards", "05 May 2025"],
               ].map(([title, date]) => (
                 <li key={title} className="flex justify-between items-center">
                   <span className="font-semibold mb-0.5">{title}</span>
@@ -98,7 +140,10 @@ const Dashboard: React.FC = () => {
             <h2 className="text-base font-medium mb-4">Recommended Grants</h2>
             <div className="space-y-3 mb-6">
               {grants.map((g) => (
-                <label key={g} className="flex items-center gap-3 cursor-pointer text-sm text-gray-700">
+                <label
+                  key={g}
+                  className="flex items-center gap-3 cursor-pointer text-sm text-gray-700"
+                >
                   <input
                     type="checkbox"
                     checked={selectedGrants.includes(g)}
@@ -124,7 +169,7 @@ const Dashboard: React.FC = () => {
                 <li>How long does the approval process take?</li>
               </ul>
             </div>
-            <div className="bg-white shadow rounded-xl p-6">
+            <div className="bg-white shadow rounded-xl p-6 mb-10">
               <h2 className="text-base font-medium mb-3">Quick links</h2>
               <ul className="list-disc list-inside text-blue-600 text-[13px] space-y-1">
                 <li>
@@ -152,4 +197,4 @@ const Dashboard: React.FC = () => {
   );
 };
 
-export default Dashboard; 
+export default Dashboard;

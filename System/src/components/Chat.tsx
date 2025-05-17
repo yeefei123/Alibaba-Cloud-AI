@@ -117,8 +117,9 @@ const Chat: React.FC = () => {
 
   return (
     <AppLayout>
-      <div className="min-h-screen flex items-center justify-center sm:block bg-transparent">
-        <div className="w-full max-w-5xl mx-auto h-[calc(100vh-8rem)]">
+      <div className="flex items-center justify-center sm:block bg-transparent">
+        <div className="w-full mx-auto h-screen flex flex-col">
+          {" "}
           <div className="flex flex-col h-full w-full">
             <header className="bg-gradient-to-r from-pink-600 to-purple-600 text-white p-4 text-xl font-bold">
               Grantee AI Chatbot
