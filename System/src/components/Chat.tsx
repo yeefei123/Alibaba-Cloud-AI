@@ -1,7 +1,7 @@
 import { jsPDF } from "jspdf";
 import { marked } from "marked";
 import React, { useEffect, useRef, useState } from "react";
-import AppLayout from '../layout/AppLayout';
+import AppLayout from "../layout/AppLayout";
 
 interface Message {
   sender: "user" | "bot";
@@ -48,7 +48,6 @@ const Chat: React.FC = () => {
     doc.setFontSize(12);
     doc.text("Business Plan Response from Grantee AI", 10, 10);
     doc.setFont("times", "normal");
-    // Strip HTML tags for clean PDF text
     const plainText = stripHtmlTags(htmlText);
     const lines = doc.splitTextToSize(plainText, 180);
     doc.text(lines, 10, 20);
@@ -72,22 +71,16 @@ const Chat: React.FC = () => {
     const prompt = `Please respond in ${language}. User says: ${input}`;
 
     try {
-      const res = await fetch("/api/qwen", {
+      const response = await fetch("http://localhost:8000/api/qwen", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prompt,
-          rag_options: {
-            knowledge_base_id: "pq3gfaz9bh",
-          },
-        }),
+        body: JSON.stringify({ prompt }),
       });
-      const data = await res.json();
+      const data = await response.json();
 
-      // Assume data.reply is raw HTML string
       const botReply: Message = {
         sender: "bot",
-        text: data.reply,
+        text: data.output?.text ?? "⚠️ No response text available.",
         isHtml: true,
       };
 
@@ -139,7 +132,9 @@ const Chat: React.FC = () => {
                     key={session.id}
                     onClick={() => setSelectedSessionId(session.id)}
                     className={`cursor-pointer p-2 rounded-lg ${
-                      session.id === selectedSessionId ? "bg-pink-300" : "bg-pink-100"
+                      session.id === selectedSessionId
+                        ? "bg-pink-300"
+                        : "bg-pink-100"
                     }`}
                   >
                     {session.title}
@@ -187,7 +182,9 @@ const Chat: React.FC = () => {
                         {msg.isHtml && msg.sender === "bot" ? (
                           <div
                             className="prose max-w-full"
-                            dangerouslySetInnerHTML={{ __html: marked(msg.text) }}
+                            dangerouslySetInnerHTML={{
+                              __html: marked(msg.text),
+                            }}
                           />
                         ) : (
                           msg.text
@@ -204,7 +201,9 @@ const Chat: React.FC = () => {
                     </div>
                   ))}
                   {loading && (
-                    <div className="text-gray-500 animate-pulse">🤖 Typing...</div>
+                    <div className="text-gray-500 animate-pulse">
+                      🤖 Typing...
+                    </div>
                   )}
                 </div>
 

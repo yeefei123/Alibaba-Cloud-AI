@@ -1,0 +1,12 @@
+# Ignore all Python setup scripts or files starting with setup_
+setup_*.py
+
+# Ignore a specific file
+setup.py
+
+# Ignore all Python files in a setup folder
+setup/*.py
+
+# Ignore virtual environments
+venv/
+.env

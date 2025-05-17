@@ -5,7 +5,10 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      "/api": "http://localhost:8080", // forward /api requests to backend
+      "/api": {
+        target: "http://localhost:8080", // or 3000, 5000 — whatever your backend runs on
+        changeOrigin: true,
+      },
     },
   },
 });
