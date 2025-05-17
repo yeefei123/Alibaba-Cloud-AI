@@ -164,7 +164,8 @@ const Chat: React.FC = () => {
               <main className="flex-1 flex flex-col">
                 <div
                   ref={chatRef}
-                  className="flex-1 overflow-y-auto p-4 space-y-4 bg-white"
+                  className="overflow-y-auto p-4 space-y-4 bg-white"
+                  style={{ height: "calc(100vh - 180px)" }}
                 >
                   {selectedSession?.messages.map((msg, idx) => (
                     <div
@@ -176,7 +177,7 @@ const Chat: React.FC = () => {
                       <div
                         className={`p-3 rounded-lg shadow-md max-w-[70%] ${
                           msg.sender === "user"
-                            ? "bg-blue-100"
+                            ? "bg-blue-500"
                             : "bg-black text-white"
                         }`}
                       >
