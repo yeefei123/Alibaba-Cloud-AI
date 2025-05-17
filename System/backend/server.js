@@ -1,34 +1,45 @@
 const express = require('express');
 const axios = require('axios');
+const cors = require('cors');
+require('dotenv').config();
 const app = express();
+
+app.use(cors());
 app.use(express.json());
 
-const ALIBABA_API_URL = 'https://nlsapi.aliyun.com/robot/chat'; 
-const ACCESS_KEY = 'your-access-key';
-const SECRET_KEY = 'your-secret-key';
+const ALIBABA_API_URL = 'https://dashscope.aliyuncs.com/api/v1';
+const API_KEY = process.env.DASHSCOPE_API_KEY;
 
 app.post('/api/chat', async (req, res) => {
   const userQuery = req.body.query;
+
   try {
-    // Call Alibaba Cloud AI API
-    const aiResponse = await axios.post(ALIBABA_API_URL, {
-      query: userQuery,
-      // other required params depending on API
-    }, {
-      headers: {
-        'Authorization': `Bearer ${ACCESS_KEY}`,
-        'Content-Type': 'application/json',
+    const response = await axios.post(
+      ALIBABA_API_URL,
+      {
+        model: 'qwen-turbo',
+        input: {
+          prompt: userQuery,
+        },
+        parameters: {
+          result_format: 'text',
+        },
       },
-    });
+      {
+        headers: {
+          'Authorization': `API-Key ${API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
 
-    // Extract reply from Alibaba response
-    const botReply = aiResponse.data.reply || "Sorry, I don't know the answer.";
-
+    const botReply = response.data.output.text || "Sorry, I couldn't generate a response.";
     res.json({ reply: botReply });
+
   } catch (error) {
-    console.error('Alibaba Cloud API error:', error);
-    res.status(500).json({ reply: 'Error processing your request.' });
+    console.error('Alibaba Cloud API error:', error?.response?.data || error.message);
+    res.status(500).json({ reply: 'Error communicating with Alibaba Cloud AI.' });
   }
 });
 
-app.listen(8080, () => console.log('Server running on port 8080'));
+app.listen(8080, () => console.log('✅ Server running on http://localhost:8080'));
