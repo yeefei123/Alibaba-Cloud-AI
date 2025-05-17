@@ -8,7 +8,6 @@ import {
   Legend,
   Pie,
   PieChart,
-  ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
@@ -345,46 +344,49 @@ const Chat: React.FC = () => {
           </aside>
 
           {/* Main Chat Area */}
-          <main className="flex-1 flex flex-col">
+          <main className="flex-1 flex flex-col" style={{ minHeight: 0 }}>
             <div
               ref={chatRef}
-              className="overflow-y-auto p-4 space-y-4 bg-white"
-              style={{ height: "100%" }}
+              className="overflow-y-auto p-4 space-y-4 bg-white flex-grow"
+              style={{ minHeight: 0, maxHeight: "calc(100vh - 130px)" }} // Add maxHeight to restrict height and enable scroll
             >
               {selectedSession?.messages.map((msg, idx) => (
-                <div
-                  key={idx}
-                  className={`flex ${
-                    msg.sender === "user" ? "justify-end" : "justify-start"
-                  }`}
-                >
+                <div key={idx}>
                   <div
-                    className={`p-3 rounded-lg shadow-md max-w-[70%] ${
-                      msg.sender === "user"
-                        ? "bg-blue-500"
-                        : "bg-black text-white"
+                    className={`flex ${
+                      msg.sender === "user" ? "justify-end" : "justify-start"
                     }`}
                   >
-                    {msg.isHtml && msg.sender === "bot" ? (
-                      <div
-                        className="prose max-w-full"
-                        dangerouslySetInnerHTML={{
-                          __html: marked(msg.text),
-                        }}
-                      />
-                    ) : (
-                      msg.text
+                    <div
+                      className={`p-3 rounded-lg shadow-md max-w-[70%] ${
+                        msg.sender === "user"
+                          ? "bg-blue-500 text-white"
+                          : "bg-black text-white"
+                      }`}
+                    >
+                      {msg.isHtml && msg.sender === "bot" ? (
+                        <div
+                          className="prose max-w-full"
+                          dangerouslySetInnerHTML={{ __html: marked(msg.text) }}
+                        />
+                      ) : (
+                        msg.text
+                      )}
+                    </div>
+                    {msg.sender === "bot" && (
+                      <button
+                        onClick={() => exportToPDF(msg.text, idx)}
+                        className="ml-2 text-xs text-pink-600 hover:underline"
+                      >
+                        📄 Export
+                      </button>
                     )}
                   </div>
-                  {msg.sender === "bot" && (
-                    <button
-                      onClick={() => exportToPDF(msg.text, idx)}
-                      className="ml-2 text-xs text-pink-600 hover:underline"
-                    >
-                      📄 Export
-                    </button>
+                  {msg.showDashboard && (
+                    <div className="mt-4">
+                      <Dashboard />
+                    </div>
                   )}
-                  {msg.showDashboard && <Dashboard />}
                 </div>
               ))}
               {loading && (
@@ -392,53 +394,24 @@ const Chat: React.FC = () => {
               )}
             </div>
 
-            {/* Conditional Dashboard */}
-            {total > 0 && (
-              <div className="bg-white p-4 shadow-md">
-                <h3 className="text-lg font-semibold mb-2">
-                  📊 License Difficulty Summary
-                </h3>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={difficultyData}
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                      label
-                    >
-                      {difficultyData.map((entry, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={COLORS[index % COLORS.length]}
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-                <p className="text-sm text-gray-600 mt-2">
-                  Total licenses: {total}
-                </p>
-              </div>
-            )}
-
-            {/* Input Box */}
-            <div className="flex p-4 bg-white border-t mt-auto">
+            <div className="p-4 bg-gray-100 flex items-center gap-2 border-t border-gray-300">
               <input
+                className="flex-grow p-2 border border-gray-300 rounded"
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !loading) {
+                    handleSend();
+                  }
+                }}
+                disabled={loading}
                 placeholder="Type your message..."
-                className="flex-1 border p-2 rounded"
-                onKeyDown={(e) => e.key === "Enter" && handleSend()}
               />
               <button
                 onClick={handleSend}
-                className="ml-2 px-4 py-2 bg-pink-600 text-white rounded hover:bg-pink-700"
+                disabled={loading || !input.trim()}
+                className="bg-pink-600 text-white px-4 py-2 rounded disabled:opacity-50"
               >
                 Send
               </button>
