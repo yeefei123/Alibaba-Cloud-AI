@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
-import './App.css'
+import './App.css';
 
 function App() {
-  const [chatSessions, setChatSessions] = useState<ChatSession[]>([
+  const [chatSessions, setChatSessions] = useState([
     {
       id: "session-1",
       title: "Chat with Grantee",
@@ -17,7 +17,7 @@ function App() {
   const [selectedSessionId, setSelectedSessionId] = useState("session-1");
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const chatRef = useRef<HTMLDivElement>(null);
+  const chatRef = useRef(null);
 
   const selectedSession = chatSessions.find((s) => s.id === selectedSessionId);
 
@@ -132,7 +132,6 @@ function App() {
                 )}
               </div>
             ))}
-
             {loading && (
               <div className="flex items-start space-x-3">
                 <div className="w-10 h-10 bg-gradient-to-br from-pink-400 to-pink-600 text-white rounded-full flex items-center justify-center shadow-lg">
@@ -147,7 +146,23 @@ function App() {
             )}
           </div>
 
-          {/* Input */}
+          {/* Upload File Button (Moved Here) */}
+          <div className="px-5 pb-3 bg-white">
+            <label className="flex bg-gray-800 hover:bg-gray-700 text-white text-base font-medium px-4 py-2.5 outline-none rounded w-max cursor-pointer mx-auto">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-6 mr-2 fill-white inline" viewBox="0 0 32 32">
+                <path
+                  d="M23.75 11.044a7.99 7.99 0 0 0-15.5-.009A8 8 0 0 0 9 27h3a1 1 0 0 0 0-2H9a6 6 0 0 1-.035-12 1.038 1.038 0 0 0 1.1-.854 5.991 5.991 0 0 1 11.862 0A1.08 1.08 0 0 0 23 13a6 6 0 0 1 0 12h-3a1 1 0 0 0 0 2h3a8 8 0 0 0 .75-15.956z"
+                  data-original="#000000" />
+                <path
+                  d="M20.293 19.707a1 1 0 0 0 1.414-1.414l-5-5a1 1 0 0 0-1.414 0l-5 5a1 1 0 0 0 1.414 1.414L15 16.414V29a1 1 0 0 0 2 0V16.414z"
+                  data-original="#000000" />
+              </svg>
+              Upload
+              <input type="file" id="uploadFile1" className="hidden" />
+            </label>
+          </div>
+
+          {/* Input Bar */}
           <div className="p-5 bg-white flex justify-center">
             <div className="w-4/5 flex gap-3">
               <input
