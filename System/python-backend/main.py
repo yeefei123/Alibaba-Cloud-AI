@@ -31,7 +31,7 @@ dashscope.base_http_api_url = "https://dashscope-intl.aliyuncs.com/api/v1"
 AGENT_CONFIGS = [
     {
         "name": "default",
-        "app_id": "a2bc39502d0f4bdebcd4c57f6e7d88cf",
+        "app_id": "9741687034c945919ecf01b2b74f9286",
         "pipeline_ids": ["pq3gfaz9bh"],
     },
     {
