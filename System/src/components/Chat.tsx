@@ -1,18 +1,38 @@
 import { jsPDF } from "jspdf";
 import { marked } from "marked";
 import React, { useEffect, useRef, useState } from "react";
+import {
+  Bar,
+  BarChart,
+  Cell,
+  Legend,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import AppLayout from "../layout/AppLayout";
 
 interface Message {
   sender: "user" | "bot";
   text: string;
   isHtml?: boolean;
+  licenseScores?: LicenseScore[];
+  showDashboard?: boolean; // NEW PROPERTY
 }
 
 interface ChatSession {
   id: string;
   title: string;
   messages: Message[];
+}
+
+interface LicenseScore {
+  name: string;
+  score: number;
+  difficulty: "easy" | "medium" | "hard";
 }
 
 const stripHtmlTags = (html: string): string => {
@@ -41,7 +61,164 @@ const Chat: React.FC = () => {
   const [language, setLanguage] = useState("English");
   const chatRef = useRef<HTMLDivElement>(null);
 
+  const Dashboard = () => {
+    // Hardcoded data from your example
+    const businessInfo = {
+      company_name: "yoyo",
+      malaysian_ownership_percent: 71,
+      operational_duration_years: 2,
+      annual_sales_turnover: 20000,
+      sme_status_certification: true,
+      business_sector: "food & beverage",
+    };
+
+    const licenses = [
+      { name: "SSM Registration", cost: 60, processingTimeDays: 2 },
+      { name: "Premises License (PBT)", cost: 1000, processingTimeDays: 28 },
+      { name: "Food Handler Certificate", cost: 65, processingTimeDays: 1 },
+      {
+        name: "Typhoid Vaccination Certificate",
+        cost: 60,
+        processingTimeDays: 0,
+      },
+    ];
+
+    const totalCost = licenses.reduce((sum, l) => sum + l.cost, 0);
+
+    // For PieChart showing license cost distribution
+    const pieData = licenses.map((l) => ({
+      name: l.name,
+      value: l.cost,
+    }));
+
+    return (
+      <div className="p-6 bg-gray-50 rounded-lg shadow-md max-w-4xl mx-auto">
+        <h2 className="text-2xl font-bold mb-4">
+          📊 Business Dashboard for {businessInfo.company_name}
+        </h2>
+
+        <div className="mb-6">
+          <h3 className="text-xl font-semibold mb-2">Business Info</h3>
+          <ul className="list-disc list-inside text-gray-700">
+            <li>
+              Malaysian Ownership: {businessInfo.malaysian_ownership_percent}%
+            </li>
+            <li>
+              Operational Duration: {businessInfo.operational_duration_years}{" "}
+              years
+            </li>
+            <li>
+              Annual Sales Turnover: RM{" "}
+              {businessInfo.annual_sales_turnover.toLocaleString()}
+            </li>
+            <li>
+              SME Certification:{" "}
+              {businessInfo.sme_status_certification ? "✅ Yes" : "❌ No"}
+            </li>
+            <li>Business Sector: {businessInfo.business_sector}</li>
+          </ul>
+        </div>
+
+        <div className="flex flex-wrap gap-12">
+          {/* Bar Chart for License Processing Time */}
+          <div>
+            <h3 className="text-xl font-semibold mb-2">
+              License Processing Time (Days)
+            </h3>
+            <BarChart
+              width={450}
+              height={250}
+              data={licenses}
+              margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
+            >
+              <XAxis
+                dataKey="name"
+                tick={{ fontSize: 12 }}
+                interval={0}
+                angle={-20}
+                textAnchor="end"
+              />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="processingTimeDays" fill="#8884d8" />
+            </BarChart>
+          </div>
+
+          {/* Pie Chart for License Cost Distribution */}
+          <div>
+            <h3 className="text-xl font-semibold mb-2">
+              License Cost Distribution
+            </h3>
+            <PieChart width={300} height={250}>
+              <Pie
+                data={pieData}
+                cx={150}
+                cy={125}
+                innerRadius={50}
+                outerRadius={80}
+                fill="#82ca9d"
+                dataKey="value"
+                label={(entry) => entry.name}
+              >
+                {pieData.map((entry, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={COLORS[index % COLORS.length]}
+                  />
+                ))}
+              </Pie>
+              <Legend />
+              <Tooltip />
+            </PieChart>
+            <p className="text-gray-700 mt-2 font-semibold">
+              Total Cost: RM {totalCost}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const COLORS = ["#00C49F", "#FFBB28", "#FF8042"];
+
   const selectedSession = chatSessions.find((s) => s.id === selectedSessionId);
+
+  const parseLicenseScores = (text: string): LicenseScore[] => {
+    try {
+      const match = text.match(/```json([\s\S]*?)```/);
+      if (match) {
+        const parsed = JSON.parse(match[1].trim());
+        if (Array.isArray(parsed)) {
+          return parsed.filter(
+            (item) =>
+              typeof item.name === "string" &&
+              typeof item.score === "number" &&
+              ["easy", "medium", "hard"].includes(item.difficulty)
+          );
+        }
+      }
+    } catch (err) {
+      console.error("Failed to parse license scores:", err);
+    }
+    return [];
+  };
+
+  const summarizeScores = (messages: Message[]) => {
+    const scores = messages.flatMap((msg) => msg.licenseScores ?? []);
+    const difficultyCount: Record<string, number> = {
+      easy: 0,
+      medium: 0,
+      hard: 0,
+    };
+    scores.forEach((s) => difficultyCount[s.difficulty]++);
+    return {
+      total: scores.length,
+      difficultyData: Object.entries(difficultyCount).map(([key, value]) => ({
+        name: key,
+        value,
+      })),
+    };
+  };
 
   const exportToPDF = (htmlText: string, index: number) => {
     const doc = new jsPDF();
@@ -78,10 +255,14 @@ const Chat: React.FC = () => {
       });
       const data = await response.json();
 
+      const licenseScores = parseLicenseScores(data.output?.text || "");
+
       const botReply: Message = {
         sender: "bot",
         text: data.output?.text ?? "⚠️ No response text available.",
         isHtml: true,
+        licenseScores,
+        showDashboard: data.output?.text?.includes("Step 1:"), // trigger dashboard rendering
       };
 
       setChatSessions((prev) =>
@@ -115,140 +296,154 @@ const Chat: React.FC = () => {
     });
   }, [chatSessions]);
 
+  const { total, difficultyData } = summarizeScores(
+    selectedSession?.messages || []
+  );
+
   return (
     <AppLayout>
-      <div className="flex items-center justify-center sm:block bg-transparent">
-        <div className="w-full mx-auto h-screen flex flex-col">
-          {" "}
-          <div className="flex flex-col h-full w-full">
-            <header className="bg-gradient-to-r from-pink-600 to-purple-600 text-white p-4 text-xl font-bold">
-              Grantee AI Chatbot
-            </header>
+      {/* CHAT UI HEADER AND MESSAGES */}
+      <div className="flex flex-col h-screen">
+        <header className="bg-gradient-to-r from-pink-600 to-purple-600 text-white p-4 text-xl font-bold">
+          Grantee AI Chatbot
+        </header>
+        <div className="flex flex-1">
+          {/* Sidebar with Chat Sessions and Language Picker */}
+          <aside className="w-64 p-4 bg-pink-50 border-r border-pink-200">
+            <h2 className="font-semibold mb-2 font-black">Chat History</h2>
+            {chatSessions.map((session) => (
+              <div
+                key={session.id}
+                onClick={() => setSelectedSessionId(session.id)}
+                className={`cursor-pointer p-2 rounded-lg ${
+                  session.id === selectedSessionId
+                    ? "bg-pink-300"
+                    : "bg-pink-100"
+                }`}
+              >
+                {session.title}
+              </div>
+            ))}
 
-            <div className="flex flex-1">
-              <aside className="w-64 p-4 bg-pink-50 border-r border-pink-200">
-                <h2 className="font-semibold mb-2 font-black">Chat History</h2>
-                {chatSessions.map((session) => (
+            <div className="mt-6">
+              <label className="block mb-1 text-sm font-medium text-pink-800">
+                Select Language
+              </label>
+              <select
+                className="w-full p-2 rounded border"
+                value={language}
+                onChange={(e) => setLanguage(e.target.value)}
+              >
+                <option>English</option>
+                <option>Malay</option>
+                <option>Chinese</option>
+                <option>Arabic</option>
+                <option>Spanish</option>
+                <option>French</option>
+              </select>
+            </div>
+          </aside>
+
+          {/* Main Chat Area */}
+          <main className="flex-1 flex flex-col">
+            <div
+              ref={chatRef}
+              className="overflow-y-auto p-4 space-y-4 bg-white"
+              style={{ height: "100%" }}
+            >
+              {selectedSession?.messages.map((msg, idx) => (
+                <div
+                  key={idx}
+                  className={`flex ${
+                    msg.sender === "user" ? "justify-end" : "justify-start"
+                  }`}
+                >
                   <div
-                    key={session.id}
-                    onClick={() => setSelectedSessionId(session.id)}
-                    className={`cursor-pointer p-2 rounded-lg ${
-                      session.id === selectedSessionId
-                        ? "bg-pink-300"
-                        : "bg-pink-100"
+                    className={`p-3 rounded-lg shadow-md max-w-[70%] ${
+                      msg.sender === "user"
+                        ? "bg-blue-500"
+                        : "bg-black text-white"
                     }`}
                   >
-                    {session.title}
-                  </div>
-                ))}
-
-                <div className="mt-6">
-                  <label className="block mb-1 text-sm font-medium text-pink-800">
-                    Select Language
-                  </label>
-                  <select
-                    className="w-full p-2 rounded border"
-                    value={language}
-                    onChange={(e) => setLanguage(e.target.value)}
-                  >
-                    <option>English</option>
-                    <option>Malay</option>
-                    <option>Chinese</option>
-                    <option>Arabic</option>
-                    <option>Spanish</option>
-                    <option>French</option>
-                  </select>
-                </div>
-              </aside>
-
-              <main className="flex-1 flex flex-col">
-                <div
-                  ref={chatRef}
-                  className="overflow-y-auto p-4 space-y-4 bg-white"
-                  style={{ height: "calc(100vh - 180px)" }}
-                >
-                  {selectedSession?.messages.map((msg, idx) => (
-                    <div
-                      key={idx}
-                      className={`flex ${
-                        msg.sender === "user" ? "justify-end" : "justify-start"
-                      }`}
-                    >
+                    {msg.isHtml && msg.sender === "bot" ? (
                       <div
-                        className={`p-3 rounded-lg shadow-md max-w-[70%] ${
-                          msg.sender === "user"
-                            ? "bg-blue-500"
-                            : "bg-black text-white"
-                        }`}
-                      >
-                        {msg.isHtml && msg.sender === "bot" ? (
-                          <div
-                            className="prose max-w-full"
-                            dangerouslySetInnerHTML={{
-                              __html: marked(msg.text),
-                            }}
-                          />
-                        ) : (
-                          msg.text
-                        )}
-                      </div>
-                      {msg.sender === "bot" && (
-                        <button
-                          onClick={() => exportToPDF(msg.text, idx)}
-                          className="ml-2 text-xs text-pink-600 hover:underline"
-                        >
-                          📄 Export
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                  {loading && (
-                    <div className="text-gray-500 animate-pulse">
-                      🤖 Typing...
-                    </div>
-                  )}
-                </div>
-
-                {/* Upload File Button */}
-                <div className="px-5 pb-3 bg-white">
-                  <label className="flex bg-gray-800 hover:bg-gray-700 text-white text-base font-medium px-4 py-2.5 outline-none rounded w-max cursor-pointer mx-auto">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="w-6 mr-2 fill-white inline"
-                      viewBox="0 0 32 32"
+                        className="prose max-w-full"
+                        dangerouslySetInnerHTML={{
+                          __html: marked(msg.text),
+                        }}
+                      />
+                    ) : (
+                      msg.text
+                    )}
+                  </div>
+                  {msg.sender === "bot" && (
+                    <button
+                      onClick={() => exportToPDF(msg.text, idx)}
+                      className="ml-2 text-xs text-pink-600 hover:underline"
                     >
-                      <path
-                        d="M23.75 11.044a7.99 7.99 0 0 0-15.5-.009A8 8 0 0 0 9 27h3a1 1 0 0 0 0-2H9a6 6 0 0 1-.035-12 1.038 1.038 0 0 0 1.1-.854 5.991 5.991 0 0 1 11.862 0A1.08 1.08 0 0 0 23 13a6 6 0 0 1 0 12h-3a1 1 0 0 0 0 2h3a8 8 0 0 0 .75-15.956z"
-                        data-original="#000000"
-                      />
-                      <path
-                        d="M20.293 19.707a1 1 0 0 0 1.414-1.414l-5-5a1 1 0 0 0-1.414 0l-5 5a1 1 0 0 0 1.414 1.414L15 16.414V29a1 1 0 0 0 2 0V16.414z"
-                        data-original="#000000"
-                      />
-                    </svg>
-                    Upload
-                    <input type="file" id="uploadFile1" className="hidden" />
-                  </label>
+                      📄 Export
+                    </button>
+                  )}
+                  {msg.showDashboard && <Dashboard />}
                 </div>
-
-                <div className="p-4 border-t flex gap-2">
-                  <input
-                    className="flex-1 p-2 border rounded"
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleSend()}
-                    placeholder="Type your message here..."
-                  />
-                  <button
-                    onClick={handleSend}
-                    className="bg-pink-500 text-white px-4 py-2 rounded hover:bg-pink-600"
-                  >
-                    Send
-                  </button>
-                </div>
-              </main>
+              ))}
+              {loading && (
+                <div className="text-gray-500 animate-pulse">🤖 Typing...</div>
+              )}
             </div>
-          </div>
+
+            {/* Conditional Dashboard */}
+            {total > 0 && (
+              <div className="bg-white p-4 shadow-md">
+                <h3 className="text-lg font-semibold mb-2">
+                  📊 License Difficulty Summary
+                </h3>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={difficultyData}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                      label
+                    >
+                      {difficultyData.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={COLORS[index % COLORS.length]}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+                <p className="text-sm text-gray-600 mt-2">
+                  Total licenses: {total}
+                </p>
+              </div>
+            )}
+
+            {/* Input Box */}
+            <div className="flex p-4 bg-white border-t mt-auto">
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Type your message..."
+                className="flex-1 border p-2 rounded"
+                onKeyDown={(e) => e.key === "Enter" && handleSend()}
+              />
+              <button
+                onClick={handleSend}
+                className="ml-2 px-4 py-2 bg-pink-600 text-white rounded hover:bg-pink-700"
+              >
+                Send
+              </button>
+            </div>
+          </main>
         </div>
       </div>
     </AppLayout>
